@@ -21,27 +21,60 @@ def restart_selenium(
     if driver is not None:
         driver.close()
     driver = webdriver.Firefox()
+    # Make sure that we wait for the page
+    # to fully and properly load
+    driver.implicitly_wait(60)
 
     return driver
 
 
-def start_newegg_checkout(
-    driver,
-    item
+def get_direct_cart_add_link(
+    vendor_name: str,
+    item_element
+) -> str:
+    if vendor_name is not NEWEGG:
+        return None
+
+    if item_element is None:
+        return None
+
+    try:
+        link_element = item_element.find_element_by_class_name(
+            "item-title")
+
+        link_address: str = link_element.get_property("href")
+        sku = link_address.split("/")[-1].split("?")[0]
+        # Example: https://secure.newegg.com/Shopping/AddtoCart.aspx?Submit=ADD&ItemList=N82E16814487518
+        new_link = f'https://secure.newegg.com/Shopping/AddtoCart.aspx?Submit=ADD&ItemList={sku}'
+
+        return new_link
+    except Exception:
+        return None
+
+
+def is_page_loaded(
+    driver: any
 ) -> bool:
-    btn = item.find_elements_by_class_name("btn-primary")[0]
-    btn.click()
-    time.sleep(0.5)
-    driver.get("https://secure.newegg.com/Shopping/ShoppingCart.aspx")
-    time.sleep(0.5)
-    driver.get(
-        "javascript:attachDelegateEvent((function(){Biz.GlobalShopping.ShoppingCart.checkOut('True')}));")
-    time.sleep(3)
+    page_state = driver.execute_script('return document.readyState;')
+    return page_state == 'complete'
 
-    if item.text.lower().find("Your shopping cart is empty") > -1:
-        return False
 
-    return True
+def wait_for_page_load(
+    driver: any,
+    maximum_seconds: float = 30.0
+):
+    if driver is None:
+        return
+
+    start_time: datetime = datetime.datetime.utcnow()
+
+    # Make sure that we wait at least 3 seconds so
+    # as not to completely trigger all of the bot
+    # detection code.
+    time.sleep(3.0)
+
+    while (datetime.datetime.utcnow() - start_time).total_seconds() < maximum_seconds and not is_page_loaded(driver):
+        time.sleep(1.0)
 
 
 def scrape_for_product(
@@ -56,28 +89,37 @@ def scrape_for_product(
     try:
         product_search_url = vendor_details.product_search_url
         driver.get(product_search_url)
-        time.sleep(3)
+        wait_for_page_load(driver)
         try:
             element_search = vendor_details.sku_containter_css_class
             items = WebDriverWait(driver, delay).until(
-                expected_conditions.presence_of_all_elements_located((By.CLASS_NAME, element_search)))
+                expected_conditions.presence_of_all_elements_located(
+                    (By.CLASS_NAME, element_search)))
             for item in items:
                 now = datetime.datetime.now()
                 print("Time : ")
                 print(now.strftime("%Y-%m-%d %H:%M:%S \n"))
                 print(f'{vendor_name}\n{item.text}\n')
 
-                if item.text.lower().find(vendor_details.add_to_cart_search) > -1:
-                    print(f'item available at {vendor_name}{item.text}')
+                new_link = get_direct_cart_add_link(vendor_name, item)
 
-                    if vendor_name is NEWEGG:
-                        should_exit = start_newegg_checkout(driver, item)
-                        break
+                if item.is_displayed() and item.text.lower().find(vendor_details.add_to_cart_search) > -1:
+                    if new_link is not None:
+                        driver.get(new_link)
+                        not_added = driver.find_elements_by_xpath(
+                            '//*[contains(text(), "No item in your shopping cart")]')
+                        if not_added is not None and len(not_added) > 0:
+                            continue
+                    else:
+                        item.click()
+
+                    should_exit = True
+                    break
         except TimeoutException:
             print(no_response_error_text)
             delay += 15
-    except WebDriverException:
-        print(no_response_error_text)
+    except WebDriverException as ex:
+        print(f'{no_response_error_text}:{ex}')
         delay += 15
 
     return (delay, should_exit)
