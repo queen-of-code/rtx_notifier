@@ -1,20 +1,23 @@
+# A simple Python + Selenium Bot
 
-# A simple python script to look for availability of GeForce RTX 3080 and 3090.
-
-## (Currently it can complete a purchase from newegg as well.)
+This bot is intended to look for availability of GeForce RTX 3080 cards.
 
 It's very straightforward to use but assumes a little knowledge of python.
-Download Geckodriver from here httpsgithub.commozillageckodriverreleases put it in PATH.
 
-You need to create a [PushBullet](https://www.pushbullet.com/account) and find your API key.
-Add your PushBullet API key to the script.
+Tested on Pop!_OS.
 
-Now you can run multiple instances by calling Python rtx_notifier.py vendor of choice
+## Installation
 
-for example:
+Installation is reasonable simple.
 
-	`Python rtx_notifier.py newegg`
+1. Clone the code.
+2. Validate that you have Python 3.8 or newer. This code uses newer Python features that are not compatible with Python 3.5
+3. Run `sudo apt install firefox-geckodriver; pip3 install selenium`
+4. Review the URLs that you would like to monitor in the `rtx_notifier.py` file
+5. Run `python3 rtx_notifier.py`
 
-The project is currently setup for RTX 3080. You need to manually change the search links in the `vendict` object.
+Please note that this runs multiple, concurrent browsers simultaneously.
+
+If a card is detected as available, the bot will attempt to add the product to your cart and pause all of the other browsers.
 
 Good luck!
