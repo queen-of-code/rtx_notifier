@@ -14,6 +14,12 @@ from product_search_details import ProductSearchDetails
 NEWEGG = "newegg"
 BESTBUY = "bestbuy"
 
+NEWEGG_SURVEY_XPATH = '//*[@id="popup-close"]'
+
+MODALS_TO_DISMISS = [NEWEGG_SURVEY_XPATH]
+
+PAGE_LOAD_WAIT_SECONDS = 60
+
 
 def restart_selenium(
     driver
@@ -23,7 +29,7 @@ def restart_selenium(
     driver = webdriver.Firefox()
     # Make sure that we wait for the page
     # to fully and properly load
-    driver.implicitly_wait(60)
+    driver.implicitly_wait(PAGE_LOAD_WAIT_SECONDS)
 
     return driver
 
@@ -77,6 +83,30 @@ def wait_for_page_load(
         time.sleep(1.0)
 
 
+def dismiss_popups(
+    driver: any
+) -> None:
+    if driver is None:
+        return
+
+    # Make sure that we temporarily disable
+    # page load waits so we do not cause
+    # stalling or delays while searching for popups
+    # that are not on the page.
+    driver.implicitly_wait(0)
+
+    try:
+        for xpath in MODALS_TO_DISMISS:
+            try:
+                elements = driver.find_elements_by_xpath(xpath)
+                if elements is not None and len(elements) > 0:
+                    elements[0].click()
+            except Exception:
+                pass
+    finally:
+        driver.implicitly_wait(PAGE_LOAD_WAIT_SECONDS)
+
+
 def scrape_for_product(
     driver: any,
     vendor_name: str,
@@ -90,6 +120,7 @@ def scrape_for_product(
         product_search_url = vendor_details.product_search_url
         driver.get(product_search_url)
         wait_for_page_load(driver)
+        dismiss_popups(driver)
         try:
             element_search = vendor_details.sku_containter_css_class
             items = WebDriverWait(driver, delay).until(
