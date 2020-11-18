@@ -1,7 +1,7 @@
 
 import time
 
-from product_scraper import BESTBUY, NEWEGG, ProductScraper
+from product_scraper import BESTBUY, NEWEGG, AMAZON, ProductScraper
 from product_search_details import ProductSearchDetails
 
 add_to_cart_button_search = "add to cart"
@@ -9,15 +9,21 @@ add_to_cart_button_search = "add to cart"
 # Update the search term for each of the vendors. the css class to look for. should be fine for a while. currenly setup for 3080
 search_details_by_vendor = {
     NEWEGG: ProductSearchDetails(
-        "https://www.newegg.com/p/pl?d=rtx+3080&N=50001315%20601357261%20100007709%204841%2050001402%2050001314&isdeptsrh=1",
+        "https://www.newegg.com/amd-ryzen-9-5900x/p/N82E16819113664?Description=ryzen%205900X&cm_re=ryzen_5900X-_-19-113-664-_-Product",
         "item-cell",
         add_to_cart_button_search,
-        2),
+        30),
     BESTBUY: ProductSearchDetails(
-        "https://www.bestbuy.com/site/searchpage.jsp?_dyncharset=UTF-8&id=pcat17071&iht=y&keys=keys&ks=960&list=n&qp=brand_facet%3DBrand~ASUS%5Ebrand_facet%3DBrand~EVGA%5Ebrand_facet%3DBrand~NVIDIA&sc=Global&st=rtx%203080&type=page&usc=All%20Categories",
+        "https://www.bestbuy.com/site/amd-ryzen-9-5900x-4th-gen-12-core-24-threads-unlocked-desktop-processor-without-cooler/6438942.p?skuId=6438942",
         "sku-item",
         add_to_cart_button_search,
-        5)
+        30),
+    AMAZON: ProductSearchDetails(
+        "https://www.amazon.com/dp/B08164VTWH/?coliid=I3PAZ8LEXLKMYN&colid=325VOIXRKKDHA&psc=0&ref_=lv_ov_lig_dp_it",
+        "style__item__3gM_7",
+        add_to_cart_button_search,
+        30)
+
 }
 
 #    "zotac": (0, "https://store.zotac.com/zotac-gaming-geforce-rtx-3080-trinity-zt-a30800d-10p", "product-essential", "add to cart", 20),

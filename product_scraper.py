@@ -2,6 +2,7 @@ import datetime
 import random
 import threading
 import time
+import playsound
 
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, WebDriverException
@@ -13,7 +14,8 @@ from product_search_details import ProductSearchDetails
 
 NEWEGG = "newegg"
 BESTBUY = "bestbuy"
-
+AMAZON = "amazon"
+SOUND = "kefka.wav"
 
 def restart_selenium(
     driver
@@ -66,6 +68,7 @@ def scrape_for_product(
                 print("Time : ")
                 print(now.strftime("%Y-%m-%d %H:%M:%S \n"))
                 print(f'{vendor_name}\n{item.text}\n')
+                playsound.playsound(SOUND, True)
 
                 if item.text.lower().find(vendor_details.add_to_cart_search) > -1:
                     print(f'item available at {vendor_name}{item.text}')
